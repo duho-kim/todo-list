@@ -1,0 +1,22 @@
+# Maven build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Spring Boot packaged files
+*.jar
+*.war
+
+# Temporary files
+*.tmp
