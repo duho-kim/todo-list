@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TaskService {
@@ -19,15 +18,13 @@ public class TaskService {
     }
 
     // 전체 목록 조회
-    public List<Task> getTasks(String status, String sort, String keyword) {
+    public List<Task> getTasks(String status, String sort, String keyword, String userToken) {
 
         boolean sortByTargetDate = "targetDate".equals(sort);
 
-        // 1) 🔍 keyword가 있을 때 → 무조건 제목 검색 우선
         if (keyword != null && !keyword.isBlank()) {
-            List<Task> result = taskRepository.findByTitleContainingIgnoreCase(keyword);
+            List<Task> result = taskRepository.findByUserTokenAndTitleContainingIgnoreCase(userToken, keyword);
 
-            // 정렬 옵션도 가능하면 적용
             if (sortByTargetDate) {
                 result.sort(Comparator.comparing(Task::getTargetDate,
                         Comparator.nullsLast(Comparator.naturalOrder())));
@@ -36,39 +33,37 @@ public class TaskService {
             return result;
         }
 
-        // 2) 🔥 keyword 없으면 기존 로직 그대로
-
         // 상태 필터 없을 때
         if (status == null || status.isEmpty()) {
             return sortByTargetDate
-                    ? taskRepository.findAllByOrderByTargetDateAsc()
-                    : taskRepository.findAll();
+                    ? taskRepository.findByUserTokenOrderByTargetDateAsc(userToken)
+                    : taskRepository.findByUserToken(userToken);
         }
 
         // 상태 필터 있을 때
         TaskStatus s = TaskStatus.valueOf(status);
 
         return sortByTargetDate
-                ? taskRepository.findAllByStatusOrderByTargetDateAsc(s)
-                : taskRepository.findByStatus(s);
+                ? taskRepository.findByUserTokenAndStatusOrderByTargetDateAsc(userToken, s)
+                : taskRepository.findByUserTokenAndStatus(userToken, s);
     }   
 
     // 상태별 목록 조회
-    public List<Task> getTasksByStatus(String status) {
-        return taskRepository.findByStatus(TaskStatus.valueOf(status));
+    public List<Task> getTasksByStatus(String status, String userToken) {
+        TaskStatus s = TaskStatus.valueOf(status);
+        return taskRepository.findByUserTokenAndStatus(userToken, s);
     }
+    
 
     // 단건 조회
-    public Task getTask(Long id) {
-        Optional<Task> optionalTask = taskRepository.findById(id);
-        if (!optionalTask.isPresent()) {
-            throw new IllegalArgumentException("Task not found: " + id);
-        }
-        return optionalTask.get();
+    public Task getTask(Long id, String userToken) {
+        return taskRepository.findByIdAndUserToken(id, userToken)
+        .orElseThrow(() -> new IllegalArgumentException("Task not found or unauthorized: " + id));
     }
 
     // 생성
-    public Task createTask(Task data) {
+    public Task createTask(Task data, String userToken) {
+        data.setUserToken(userToken);
         // DONE 처리
         if (data.getStatus() == TaskStatus.DONE) {
             if (data.getCompleteDate() != null) {
@@ -84,10 +79,9 @@ public class TaskService {
     
 
     // 수정
-    public Task updateTask(Long id, Task data) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Task not found: " + id));
-    
+    public Task updateTask(Long id, Task data, String userToken) {
+        Task task = getTask(id, userToken);
+
         // 이전 상태 저장
         TaskStatus oldStatus = task.getStatus();
         TaskStatus newStatus = data.getStatus();
@@ -115,9 +109,9 @@ public class TaskService {
     }
     
     
-    
-    public void changeStatus(Long id, TaskStatus newStatus) {
-        Task task = getTask(id);
+    // 상태 변경
+    public void changeStatus(Long id, TaskStatus newStatus, String userToken) {
+        Task task = getTask(id, userToken);
         TaskStatus oldStatus = task.getStatus();
 
         // 상태 변경 적용
@@ -137,12 +131,8 @@ public class TaskService {
     }
 
     // 삭제
-    public void deleteTask(Long id) {
-        Optional<Task> optionalTask = taskRepository.findById(id);
-        if (!optionalTask.isPresent()) {
-            throw new IllegalArgumentException("Task not found: " + id);
-        }
-
-        taskRepository.deleteById(id);
+    public void deleteTask(Long id, String userToken) {
+        Task task = getTask(id, userToken);
+        taskRepository.delete(task);
     }
 }

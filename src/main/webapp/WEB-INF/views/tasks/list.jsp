@@ -17,12 +17,10 @@
             padding: 30px;
         }
 
-        /* 상태 색상 */
         .status-TODO  { color: #0d6efd !important; font-weight: 600; }
         .status-DOING { color: #fd7e14 !important; font-weight: 600; }
         .status-DONE  { color: #198754 !important; font-weight: 600; }
 
-        /* 탭 스타일 */
         .task-tabs {
             display: flex;
             gap: 15px;
@@ -45,7 +43,6 @@
             border-color: #0d6efd;
         }
 
-        /* 열 비율 */
         .col-no         { width: 6%; }
         .col-title      { width: 38%; }
         .col-target     { width: 14%; }
@@ -59,12 +56,10 @@
             text-decoration: none;
         }
 
-        /* 테이블 안 폼 아래쪽 기본 마진 제거 (세로정렬 깔끔하게) */
         td form {
             margin-bottom: 0 !important;
         }
 
-        /* 상단 바 정렬용 */
         .top-bar {
             min-height: 48px;
         }
@@ -82,7 +77,6 @@
             <h1 class="m-0">📌 Todo 리스트</h1>
         </div>
 
-        <!-- ✅ 탭 + 검색 + 추가 버튼 (상하 가운데 정렬 버전) -->
         <div class="top-bar d-flex align-items-center mb-3">
 
             <!-- 왼쪽: 탭들 -->
@@ -126,7 +120,6 @@
                 <form action="/tasks" method="get"
                       class="d-flex align-items-center" style="gap: 6px;">
 
-                    <!-- 검색어 유지 (필터 유지한 상태에서도 검색 가능) -->
                     <c:if test="${not empty param.status}">
                         <input type="hidden" name="status" value="${param.status}">
                     </c:if>

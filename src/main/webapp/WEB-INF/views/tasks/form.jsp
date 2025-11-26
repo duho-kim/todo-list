@@ -54,7 +54,6 @@
                                   class="form-control">${task.description}</textarea>
                     </div>
         
-                    <!-- 🔥 목표일 + 상태 한 줄로 정렬 -->
                     <div class="row">
                         <!-- 목표일 -->
                         <div class="col-md-6 mb-3">
